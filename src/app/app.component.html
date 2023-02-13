@@ -1,0 +1,211 @@
+<main [ngClass]="{busy: busy}">
+  <p-toolbar>
+    <div class="p-toolbar-group-left" style="flex: 1;">
+      <a href="https://docs.gradle.org/current/userguide/build_lifecycle.html" class="mr-2">
+        <img width="28" src="assets/images/taskinfo-viewer.png">
+      </a>
+      <button pButton pRipple type="button"
+        label="Gradle Project:"
+        class="p-button-text mr-2"
+        (click)="selectGradleProjectStart()"
+        title="Gradle Project:">
+      </button>
+      <div
+        class="p-text-bold"
+        title="{{gradleProjectPath}}"
+        style="flex: 1; overflow: hidden; text-align: left; direction: rtl; text-overflow: ellipsis; white-space: nowrap;">
+        {{ gradleProjectPath }}
+      </div>
+      <label for="ti-task" class="ml-2">Run gradlew</label>
+      <p-dropdown
+        [options]="tiTasks"
+        [(ngModel)]="tiTask"
+        optionLabel="name"
+        optionValue="tiTask"
+        styleClass="ml-2"
+        [baseZIndex]="1000"
+        id="ti-task">
+      </p-dropdown>
+
+      <!-- <p-autoComplete [(ngModel)]="text" [suggestions]="results" (completeMethod)="search($event)"></p-autoComplete> -->
+
+      <p-autoComplete
+        class="ml-2"
+        [(ngModel)]="tasksToRunTiTasksOn"
+        [suggestions]="suggestedTasks"
+        (completeMethod)="matchTasks($event)"
+        [minLength]="1">
+      </p-autoComplete>
+
+      <!-- <input type="text"
+        pInputText
+        pTooltip="Run 'gradlew {{ tiTask}} {{tasksToRunTiTasksOn }}'. This only works in gradle workspace folder and when gradle-taskinfo is applied!"
+        size="16"
+        [(ngModel)]="tasksToRunTiTasksOn"
+        class="ml-2"
+        style="min-width: 1rem;"
+        id="task"/> -->
+      <p-button
+        pTooltip="Run 'gradlew {{ tiTask}} {{tasksToRunTiTasksOn }}'. This only works in gradle workspace folder and when gradle-taskinfo is applied!"
+        (click)="runTiTaskOnTasks()"
+        icon="pi pi-play"
+        class="ml-2"
+        styleClass="p-button-sm">
+      </p-button>
+      <p-button
+        (click)="showConfigureGradleTaskInfo()"
+        icon="pi pi-comment"
+        class="ml-2"
+        styleClass="p-button-sm"
+        title="{{ 'TASKINFO.VIEWER.CONFIGURE_GRADLE_TASKINFO_TITLE' | translate }}">
+      </p-button>
+      <p-button
+        (click)="configureGradleTaskInfoStart()"
+        icon="pi pi-globe"
+        class="ml-2"
+        styleClass="p-button-sm"
+        title="{{ 'TASKINFO.VIEWER.GLOBALLY_CONFIGURE_GRADLE_TASKINFO_TITLE' | translate }}">
+      </p-button>
+      <a href="https://plugins.gradle.org/plugin/org.barfuin.gradle.taskinfo" class="ml-4">
+        <i class="pi pi-external-link"></i>
+      </a>
+    </div>
+  </p-toolbar>
+  <p-toolbar>
+    <div class="p-toolbar-group-left" style="flex: 1;">
+      <!-- <img class="mr-2" width="32" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="> -->
+      <p-splitButton
+        label="{{ 'TASKINFO.VIEWER.LOAD_BUTTON_LABEL' | translate }}"
+        class="p-button-text mr-2"
+        [model]="taskInfoFilesToLoad"
+        (onClick)="loadTaskInfosStart()"
+        [appendTo]="'body'"
+        [menuStyle]="{ 'min-width.px': 600, 'z-index': 1000 }"
+        title="{{ 'TASKINFO.VIEWER.LOAD_BUTTON_TITLE' | translate }}">
+      </p-splitButton>
+      <div
+        class="p-text-bold"
+        title="{{taskinfoFilePath}}"
+        style="flex: 1; overflow: hidden; text-align: left; direction: rtl; text-overflow: ellipsis; white-space: nowrap;">
+        {{ taskinfoFilePath }}
+      </div>
+      <span class="p-text-bold mr-3">{{ 'TASKINFO.VIEWER.TASK_LABEL' | translate }}</span>
+      <p-selectButton [options]="modes" [(ngModel)]="mode">
+        <ng-template let-mode>
+          <i [class]="mode.icon"></i>
+        </ng-template>
+      </p-selectButton>
+      <a href="https://github.com/sandipchitale/vscode-taskinfo-viewer" class="ml-4">
+        <i class="pi pi-github"></i>
+      </a>
+    </div>
+  </p-toolbar>
+  <ng-container *ngIf="(mode === 'Tree')">
+    <p-treeTable
+      [value]="taskinfoTreeNodes"
+      styleClass="p-treetable-sm"
+      [resizableColumns]="true"
+      [scrollable]="true"
+      scrollHeight="flex"
+      class="px-3">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 35%;">{{'TASKINFO.VIEWER.TASK_PATH_LABEL' | translate}}</th>
+          <th style="width: 15%;">{{'TASKINFO.VIEWER.TASK_NAME_LABEL' | translate}}</th>
+          <th style="width: 10%;">{{'TASKINFO.VIEWER.TASK_GROUP_LABEL' | translate}}</th>
+          <th style="width: 5%; " class="p-text-right">{{'TASKINFO.VIEWER.TASK_QUEUE_POSITION_LABEL' | translate}}</th>
+          <th style="width: 35%;">{{'TASKINFO.VIEWER.TASK_TYPE_LABEL' | translate}}</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
+        <tr [ttRow]="rowNode">
+          <td style="width: 35%;">
+            <p-treeTableToggler
+              [rowNode]="rowNode"
+              [style.marginLeft]="rowNode.level * 16 + 'px'">
+            </p-treeTableToggler>
+            <span [ngClass]="{'p-text-bold': !rowData.repeat, 'p-text-light': rowData.repeat}">{{ rowData.path }}</span>
+          </td>
+          <td style="width: 15%;">{{ rowData.name }}</td>
+          <td style="width: 10%;">{{ rowData.group }}</td>
+          <td style="width:  5%;" class="p-text-right">
+              {{ rowData.queuePosition }}</td>
+          <td style="width: 35%;">{{ rowData.type }}</td>
+        </tr>
+      </ng-template>
+    </p-treeTable>
+  </ng-container>
+  <ng-container *ngIf="(mode === 'Org')">
+    <p-organizationChart [value]="taskinfoTreeNodes">
+      <ng-template let-node pTemplate="default">
+        <img class="mr-2" width="16" src="assets/images/taskinfo-viewer.png">
+        <span class="p-text-bold">{{ node.data.path }}</span>
+      </ng-template>
+    </p-organizationChart>
+  </ng-container>
+  <ng-container *ngIf="(mode === 'Order')">
+    <p-table
+      [value]="orderedTaskInfos"
+      styleClass="p-datatable-sm"
+      [resizableColumns]="true"
+      [scrollable]="true"
+      scrollHeight="flex">
+      <ng-template pTemplate="header">
+        <tr>
+          <th pResizableColumn style="width: 5%;" class="p-text-right" >{{'TASKINFO.VIEWER.TASK_QUEUE_POSITION_LABEL' | translate}}</th>
+          <th pResizableColumn style="width: 25%;">{{'TASKINFO.VIEWER.TASK_PATH_LABEL' | translate}}</th>
+          <th pResizableColumn style="width: 25%;">{{'TASKINFO.VIEWER.TASK_NAME_LABEL' | translate}}</th>
+          <th pResizableColumn style="width: 10%;">{{'TASKINFO.VIEWER.TASK_GROUP_LABEL' | translate}}</th>
+          <th pResizableColumn style="width: 35%;">{{'TASKINFO.VIEWER.TASK_TYPE_LABEL' | translate}}</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-orderedTaskInfo>
+        <tr>
+          <td class="p-text-right">{{ orderedTaskInfo.queuePosition }}</td>
+          <td><span class="p-text-bold">{{ orderedTaskInfo.path }}</span></td>
+          <td>{{ orderedTaskInfo.name }}</td>
+          <td>{{ orderedTaskInfo.group }}</td>
+          <td>{{ orderedTaskInfo.type }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </ng-container>
+</main>
+
+<p-dialog
+  [(visible)]="displayConfigureGradleTaskInfo"
+  [appendTo]="'body'"
+  [baseZIndex]="1000"
+  (onHide)="displayConfigureGradleTaskInfo = false">
+  <p-header>
+    <i class="pi pi-comment mr-2"></i>{{ 'TASKINFO.VIEWER.CONFIGURE_GRADLE_TASKINFO_TITLE' | translate }}
+  </p-header>
+  {{ 'TASKINFO.VIEWER.CONFIGURE_GRADLE_TASKINFO_MESSAGE' | translate }}
+  <pre><![CDATA[
+initscript {
+  repositories {
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+  }
+  dependencies {
+    classpath "gradle.plugin.org.barfuin.gradle.taskinfo:gradle-taskinfo:1.0.5"
+  }
+}
+
+rootProject {
+  apply plugin: org.barfuin.gradle.taskinfo.GradleTaskInfoPlugin
+
+  taskinfo {
+    clipped = true
+    color = false
+  }
+}
+  ]]></pre>
+  {{ 'TASKINFO.VIEWER.APPLY_GRADLE_TASKINFO_MESSAGE' | translate }}
+  <pre><![CDATA[
+plugins {
+  id "org.barfuin.gradle.taskinfo" version "1.0.5"
+}
+      ]]></pre>
+</p-dialog>
