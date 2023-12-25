@@ -54,8 +54,12 @@ export class AppComponent implements AfterViewInit {
 
   taskinfoTreeNodes: TreeNode<TaskInfo>[] = [];
 
+  selectedTaskinfoTreeNodes: TreeNode<TaskInfo>[] = [];
+
   taskinfos: TaskInfo[] = [];
+
   orderedTaskInfos: TaskInfo[] = [];
+  selectedOrderedTaskInfos: TaskInfo[] = [];
 
   gradleProjectPath = '';
 

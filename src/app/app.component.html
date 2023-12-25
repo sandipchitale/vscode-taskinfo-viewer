@@ -107,10 +107,15 @@
       [resizableColumns]="true"
       [scrollable]="true"
       scrollHeight="flex"
+      selectionMode="checkbox"
+      [(selection)]="selectedTaskinfoTreeNodes"
       class="px-3">
       <ng-template pTemplate="header">
         <tr>
-          <th style="width: 35%;">{{'TASKINFO.VIEWER.TASK_PATH_LABEL' | translate}}</th>
+          <th style="width: 35%;">
+            <p-treeTableHeaderCheckbox class="mr-2" title="Exclude All"></p-treeTableHeaderCheckbox>
+            {{'TASKINFO.VIEWER.TASK_PATH_LABEL' | translate}} ( -x )
+          </th>
           <th style="width: 15%;">{{'TASKINFO.VIEWER.TASK_NAME_LABEL' | translate}}</th>
           <th style="width: 10%;">{{'TASKINFO.VIEWER.TASK_GROUP_LABEL' | translate}}</th>
           <th style="width: 5%; " class="p-text-right">{{'TASKINFO.VIEWER.TASK_QUEUE_POSITION_LABEL' | translate}}</th>
@@ -124,6 +129,10 @@
               [rowNode]="rowNode"
               [style.marginLeft]="rowNode.level * 16 + 'px'">
             </p-treeTableToggler>
+            <p-treeTableCheckbox
+              class="mx-2"
+              [value]="rowNode"
+              title="Exclude"></p-treeTableCheckbox>
             <span [ngClass]="{'p-text-bold': !rowData.repeat, 'p-text-light': rowData.repeat}">{{ rowData.path }}</span>
           </td>
           <td style="width: 15%;">{{ rowData.name }}</td>
@@ -146,22 +155,33 @@
   <ng-container *ngIf="(mode === 'Order')">
     <p-table
       [value]="orderedTaskInfos"
+      selectionMode="multiple"
+      [(selection)]="selectedOrderedTaskInfos"
       styleClass="p-datatable-sm"
       [resizableColumns]="true"
       [scrollable]="true"
       scrollHeight="flex">
       <ng-template pTemplate="header">
         <tr>
-          <th pResizableColumn style="width: 5%;" class="p-text-right" >{{'TASKINFO.VIEWER.TASK_QUEUE_POSITION_LABEL' | translate}}</th>
+          <th pResizableColumn style="width: 5%;" class="p-text-right" >
+            <p-tableHeaderCheckbox class="mr-2" title="Exclude All"></p-tableHeaderCheckbox>
+            {{'TASKINFO.VIEWER.TASK_QUEUE_POSITION_LABEL' | translate}} ( -x )
+          </th>
           <th pResizableColumn style="width: 25%;">{{'TASKINFO.VIEWER.TASK_PATH_LABEL' | translate}}</th>
           <th pResizableColumn style="width: 25%;">{{'TASKINFO.VIEWER.TASK_NAME_LABEL' | translate}}</th>
           <th pResizableColumn style="width: 10%;">{{'TASKINFO.VIEWER.TASK_GROUP_LABEL' | translate}}</th>
           <th pResizableColumn style="width: 35%;">{{'TASKINFO.VIEWER.TASK_TYPE_LABEL' | translate}}</th>
         </tr>
       </ng-template>
-      <ng-template pTemplate="body" let-orderedTaskInfo>
-        <tr>
-          <td class="p-text-right">{{ orderedTaskInfo.queuePosition }}</td>
+      <ng-template pTemplate="body" let-orderedTaskInfo let-rowIndex="rowIndex">
+        <tr [pSelectableRow]="orderedTaskInfo" [pSelectableRowIndex]="rowIndex">
+          <td class="p-text-right">
+            <p-tableCheckbox
+              [value]="orderedTaskInfo"
+              class="mr-2"
+              title="Exclude"></p-tableCheckbox>
+            {{ orderedTaskInfo.queuePosition }}
+          </td>
           <td><span class="p-text-bold">{{ orderedTaskInfo.path }}</span></td>
           <td>{{ orderedTaskInfo.name }}</td>
           <td>{{ orderedTaskInfo.group }}</td>
